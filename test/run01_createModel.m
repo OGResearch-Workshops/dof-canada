@@ -1,7 +1,7 @@
 
 %% Create and solve model object
 %
-% Create a model object from the model file <Simple_SPBC.model>, assign
+% Create a model object from the model file `Simple_SPBC.model`, assign
 % parameters to the model object, calculate its steady state, and compute
 % first-order solution matrices.
 %
@@ -14,23 +14,19 @@
 close all
 clear
 
-if ~exist("mat", "dir")
-    mkdir mat
-end
-
 
 %% Read the model file and create a model object
 %
-% The function `Model()` reads the model file <Simple_SPBC.model>, and
-% translates it into a model object, called here `m`. Model objects are
+% The function `Model.fromFile()` reads the model file `model-source/spbc.model`,
+% and translates it into a model object, called here `m`. Model objects are
 % complex structures that carry all the necessary information about the
 % model, and can be manipulated by calling various IRIS functions.
 %
 
 m = Model.fromFile( ...
     "model-source/spbc.model" ...
-    , "growth", true ...
-    , "savePreparsed", "model-source/spbc.preparsed.model" ...
+    , growth=true ...
+    , savePreparsed="model-source/spbc.preparsed.model" ...
 );
 
 disp(m)
@@ -112,7 +108,7 @@ access(m, 'steady')
 
 table( ...
     [m, m1], ["steadyLevel", "steadyChange", "form", "description"] ...
-    , "writeTable", "steady.xlsx" ...
+    , "writeTable", "xlsx/steady.xlsx" ...
 )
 
 
@@ -130,12 +126,6 @@ m = solve(m);
 disp(m)
 
 
-%% Extract first-order solution matrices
-
-st = solutionMatrices(m);
-sr = solutionMatrices(m, "triangular", false);
-
-
 
 %% Save the model object
 %
@@ -144,4 +134,5 @@ sr = solutionMatrices(m, "triangular", false);
 %
 
 save mat/createModel.mat m
+
 

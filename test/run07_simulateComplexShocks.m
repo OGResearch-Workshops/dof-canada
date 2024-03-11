@@ -1,4 +1,4 @@
-%% More Complex Simulation Experiments
+%% More complex simulation experiments
 %
 % Simulate the differences between anticipated and unanticipated future
 % shocks, run experiments with temporarily exogenized variables, and show
@@ -7,7 +7,7 @@
 %
 
 
-%% Clear Workspace
+%% Clear workspace
 %
 % Clear workspace, close all graphics figures.
 %
@@ -16,66 +16,70 @@ close all
 clear
 
 
-%% Load Solved Model Object
+%% Load solved model object
 %
 % Load the solved model object built in `read_model`.
 %
 
 load mat/createModel.mat m
-% load mat/estimateParams.mat mest
 
 checkSteady(m);
 m = solve(m);
 
-%% Define Dates and Ranges
+
+%% Define dates and ranges
 
 startDate = 1;
 endDate = 40;
 plotRng = startDate-1 : startDate+19;
 
 
-%% Simple Consumption Demand Shock
+%% Simple consumption demand shock
 
 d = zerodb(m, startDate-3:startDate);
 d.Ey(startDate) = 0.07;
-s = simulate(m, d, 1:40, "Deviation", true, "PrependInput", true);
+s = simulate( ...
+    m, d, 1:40 ...
+    , deviation=true ...
+    , prependInput=true ...
+);
 
 ch = databank.Chartpack();
 ch.Range = startDate-1 : startDate+19;
 ch.Transform = @(x) 100*(x-1);
 ch.Round = 8;
 
-ch + "Inflation, Q/Q PA // Pp Deviations: dP^4 "; %#ok<*VUNUS> 
+ch + "Inflation, Q/Q PA // Pp Deviations: dP^4 "; %#ok<*VUNUS>
 ch + "Policy rate, PA // Pp Deviations: R^4 ";
 ch + "Output // Pct Level Deviations: Y ";
 ch + "Hours Worked // Pct Level Deviations: N ";
 ch + "Real Wage // Pct Level Deviations: W/P ";
-ch + "Capital Price // Pct Level Deviations: Pk"; 
+ch + "Capital Price // Pct Level Deviations: Pk";
 
 draw(ch, s);
 visual.heading("Plain vanila consumption demand shock");
 
 
-%% Anticipated vs Unanticipated Consumption Demand Shock
+%% Anticipated vs unanticipated consumption demand shock
 %
 % Simulate a future (3 quarters ahead) aggregate demand shock twice: as
 % anticipated and unanticipated.
 %
 
-d = databank.forModel(m, startDate-3:startDate, "deviation", true);
+d = databank.forModel(m, startDate-3:startDate, deviation=true);
 d.Ey(startDate+3) = 0.07;
 s1 = simulate( ...
-    m, d, startDate:endDate, ...
-    "anticipate", true, ...
-    "deviation", true, ...
-    "prependInput", true ...
+    m, d, startDate:endDate ...
+    , anticipate=false ...
+    , deviation=true ...
+    , prependInput=true ...
 );
 
 s2 = simulate( ...
-    m, d, startDate:endDate, ...
-    "anticipate", false, ...
-    "deviation", true, ...
-    "prependInput", true ...
+    m, d, startDate:endDate ...
+    , anticipate=false ...
+    , deviation=true ...
+    , prependInput=true ...
 );
 
 tempDb = databank.merge("horzcat", s1, s2);
@@ -85,7 +89,7 @@ visual.heading("Consumption demand shock: Anticipated vs Unanticipated");
 visual.hlegend("bottom", "Anticipated", "Unanticipated");
 
 
-%% Simulate Consumption Demand Shock with Delayed Policy Reaction
+%% Simulate consumption demand shock with delayed policy reaction
 %
 % Simulate a consumption shock and, at the same time, delay the policy
 % reaction (by exogenising the policy rate to its pre-shock level for 3
@@ -99,7 +103,7 @@ visual.hlegend("bottom", "Anticipated", "Unanticipated");
 % everyone by surprize every quarter.
 
 T = 3;
-d = databank.forModel(m, startDate-3:startDate, "deviation", true);
+d = databank.forModel(m, startDate-3:startDate, deviation=true);
 d.Ey(startDate) = 0.07;
 
 p = Plan.forModel(m, startDate:endDate);
@@ -110,16 +114,16 @@ p = endogenize(p, startDate:startDate+T-1, "Er");
 d.R(startDate:startDate+T-1) = 1;
 
 s1 = simulate( ...
-    m, d, startDate:endDate, ... 
-   "deviation", true, ...
-   "prependInput", true ...
+    m, d, startDate:endDate ...
+    , deviation=true ...
+    , prependInput=true ...
 );
 
 s2 = simulate( ...
-    m, d, startDate:endDate, ...
-    "plan", p, ... 
-    "deviation", true, ...
-    "prependInput", true ...
+    m, d, startDate:endDate ...
+    , plan=p ...
+    , deviation=true ...
+    , prependInput=true ...
 );
 
 
@@ -128,10 +132,10 @@ p = exogenize(p, startDate:startDate+T-1, "R");
 p = endogenize(p, startDate:startDate+T-1, "Er");
 
 s3 = simulate( ...
-    m, d, startDate:endDate, ...
-    "plan", p, ... 
-    "deviation", true, ...
-    "prependInput", true ...
+    m, d, startDate:endDate ...
+    , plan=p ...
+    , deviation=true ...
+    , prependInput=true ...
 );
 
 
@@ -148,7 +152,7 @@ visual.hlegend("bottom", "No delay", "Anticipated", "Unanticipated");
 % (C) is a log-linearized variable, specify the 1 pct deviation from its
 % steady state as 1.01.
 
-d = databank.forModel(m, startDate-3:startDate, "deviation", true);
+d = databank.forModel(m, startDate-3:startDate, deviation=true);
 d.Y(startDate) = 1.01;
 
 p = Plan.forModel(m, startDate:endDate);
@@ -156,10 +160,10 @@ p = exogenize(p, startDate, "Y");
 p = endogenize(p, startDate, "Ey");
 
 s = simulate(...
-    m, d, startDate:endDate, ...
-    "Plan", p, ...
-    "Deviation", true, ...
-    "PrependInput", true ...
+    m, d, startDate:endDate ...
+    , plan=p ...
+    , deviation=true ...
+    , prependInput=true ...
 );
 
 disp(s.Ey{1:10})
@@ -168,9 +172,9 @@ draw(ch, s);
 visual.heading("Consumption demand shock with fixed impact");
 
 
-%% Simulate Consumption Demand Shocks with Multiple Parameterisations
+%% Simulate consumption demand shocks with multiple parameterisations
 %
-% Within the same model object, expand the number of parameter variants, 
+% Within the same model object, expand the number of parameter variants,
 % and assign different sets of values to some (or all) of the parameters
 % (here, only the values for the parameter `xip` vary, i.e. the price
 % adjustment costs).  Solve and simulate all parameter variants at once.
@@ -186,11 +190,12 @@ d = zerodb(mm, startDate-3:startDate);
 d.Ey(1, :) = 0.07;
 
 s = simulate( ...
-    mm, d, startDate:endDate, ...
-    "deviation", true, ...
-    "prependInput", true ...
+    mm, d, startDate:endDate ...
+    , deviation=true ...
+    , prependInput=true ...
 );
 
 draw(ch, s);
 visual.heading("Consumption demand shock with mutliple parameter variants");
+
 
